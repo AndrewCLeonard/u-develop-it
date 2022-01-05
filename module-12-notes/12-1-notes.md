@@ -1,6 +1,14 @@
-# Lesson 12.1
+# Lesson 12
 
-## 12.1.2 Preview
+## Lesson 12.1
+
+set up and manage a db and table
+
+-   create table
+-   seed table with data
+-   perform CRUD operations (create, read, update, delete) with SQL commands
+
+### 12.1.2 Preview
 
 Which of the following gameplans do you think is the best way to tackle this lesson?
 
@@ -13,16 +21,16 @@ _We need to create the MySQL database and set up the candidates table before we 
 | 3      | 12.1.5   | Populate candidates table with data.      | The next step is to add data about the candidates to the table.                                                                                            |
 | 3      | 12.1.6   | Save queries in schema and seed files.    | Create schema and seed files so that other developers can automatically create the database structure and pre-populate it with data from the command line. |
 
-## 12.1.3 Set Up the Project
+### 12.1.3 Set Up the Project
 
 1. Create the Repo
 1. Create the GihHub Issues
 1. Clone the Repo and Create Branches
 1. Set up teh Project Directory
 
-### Create the Repo
+#### Create the Repo
 
-### Create the GihHub Issues
+#### Create the GihHub Issues
 
 **Title:**
 Create a database that contains the candidates table
@@ -79,11 +87,11 @@ Create the votes table
 
 -   As a user, I can cast a vote for a candidate.
 
-### Clone the Repo and Create Branches
+#### Clone the Repo and Create Branches
 
-### Set up the Project Directory
+#### Set up the Project Directory
 
-## 12.1.4 Create the Election Database and Candidates Table
+### 12.1.4 Create the Election Database and Candidates Table
 
 **GitHub Issue Title:**
 Create a database that contains the candidates table
@@ -101,14 +109,14 @@ Create a database that contains the candidates table
 | **table**    | rows and columns. Columns = fields, row = a record                                                                                                                              |
 | **query**    | request for data from a database table or a combination of tables                                                                                                               |
 
-### Setup a Database
+#### Setup a Database
 
 | Code                        | Description                   |
 | --------------------------- | ----------------------------- |
 | `CREATE DATABASE election;` | creates database              |
 | `USE election`              | select the database to modify |
 
-### Create the Candidates Table Using the MySQL CLI
+#### Create the Candidates Table Using the MySQL CLI
 
 ```
 CREATE TABLE candidates (
@@ -119,7 +127,7 @@ CREATE TABLE candidates (
 );
 ```
 
-#### Explanations
+##### Explanations
 
 | Code                   | Explanation                                                                                                                                                                                                                    |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -133,7 +141,7 @@ CREATE TABLE candidates (
 | `;`                    | SQL statements require a semicolon                                                                                                                                                                                             |
 | `DESCRIBE candidates;` | describes table's fields (don't forget semicolon at end)                                                                                                                                                                       |
 
-### Create the Candidates Table
+#### Create the Candidates Table
 
 ```
 CREATE TABLE candidates (
@@ -146,7 +154,7 @@ CREATE TABLE candidates (
 
 use `DESCRIBE candidates` to ensure it worked.
 
-## 12.1.5 Populate Candidates Table with Data
+### 12.1.5 Populate Candidates Table with Data
 
 ```
 INSERT INTO candidates (first_name, last_name, industry_connected)
@@ -161,7 +169,7 @@ VALUES ('Ronald', 'Firbank', 1);
 | `VARCHAR` values         | must be surrounded by quotes because they're strings                 |
 | `;`                      | Don't forget the semicolons                                          |
 
-### Query Examples
+#### Query Examples
 
 `SELECT * FROM candidates;` shows everything (`*`= wildcard) from the `candidates` table.
 `SELECT first_name, last_name FROM candidates;` will only show those 2 columns
@@ -180,7 +188,7 @@ FROM candidates
 WHERE id = 5;
 ```
 
-## 12.1.6 Save Queries in Schema and Seed Files
+### 12.1.6 Save Queries in Schema and Seed Files
 
 _How do we share database/table setup?_
 
@@ -225,19 +233,130 @@ VALUES
   ('Octavia', 'Butler', 1),
   ('Unica', 'Zurn', 1);
 ```
+
 -   `source db/seeds.sql`
 -   verify it worked with `SELECT * FROM candidates;`
 
-### Changing Tables 
-#### `UPDATE` Operation.
+#### Changing Tables
+
+##### `UPDATE` Operation.
+
 ```
 UPDATE candidates
 SET industry_connected = 1
 WHERE id = 3;
 ```
-#### `DELETE` Operation
+
+##### `DELETE` Operation
+
 ```
 DELETE FROM candidates
 WHERE first_name = "Montague";
-``` 
-Preferable to use id to avoid typos. 
+```
+
+Preferable to use id to avoid typos.
+
+## Lesson 12.2
+
+create API routes to allow client web application to execute CRUD operations on the db
+
+-   Connect to a MySQL database with a Node.js application.
+-   Execute SQL queries in the Express.js routes using MySQL methods.
+-   Test the API endpoint using Insomnia and the browser.
+
+### 12.2.2 Preview
+
+| Step # | Module # | Task                                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------ | -------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | 12.2.3   | Set up the Node.js application with MySQL. | Connect to the MySQL database in the Node.js application.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 2      | 12.2.4   | Build the database calls.                  | Use mysql2 to make calls to the database to execute the SQL queries.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 3      | 12.2.5   | Create the GET routes.                     | Use Express.js to build the GET routes to perform the read operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 4      | 12.2.6   | Create the DELETE route.                   | Use Express.js to build the DELETE routes to perform the delete operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 5      | 12.2.7   | Create the POST route.                     | Use Express.js to build the POST routes to perform the create operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 6      | 12.2.8   | Save your progress with Git.               | Finally, we’ll need to close the corresponding GitHub issue.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 7      | 12.2.9   | Set up the Node.js application with MySQL. | Connect to the MySQL database in the Node.js application. Build the database calls. Use mysql2 to make calls to the database to execute the SQL queries. Create the GET routes. Use Express.js to build the GET routes to perform the read operations. Create the DELETE route. Use Express.js to build the DELETE routes to perform the delete operations. Create the POST route. Use Express.js to build the POST routes to perform the create operations. Save your progress with Git. Finally, we’ll need to close the corresponding GitHub issue. , |
+
+We’ll need to set up the Node.js application and install the mysql2 package before we can make calls to the database and build the routes for the CRUD operations.
+
+### 12.2.3 Set Up the Node.js Application with MySQL
+
+1. Initialize Node.js and Create .gitignore File
+1. Install npm Packages
+1. Install and Set up Testing Using Jest
+1. Check the Database
+1. Create Connection to Express.js Server
+1. Test the Express.js Connection
+1. Review the server.js File
+1. Connect to the MySQL Database
+
+#### Initialize Node.js and Create .gitignore File
+
+`npm init --y`
+
+This will create `.gitignore and add node_modules to it, overwriting anything else pre-existing: `echo "node_modules/" > .gitignore`
+
+#### Install npm Packages
+
+`npm install express mysql2`
+`npm install jest --save-dev`
+
+#### Install and Set up Testing Using Jest
+
+in `package.json`:
+
+```
+"scripts": {
+  "test": "jest",
+},
+```
+
+and...
+`"start": "node server.js"` in `scripts` under `test`.
+
+#### Check the Database
+
+1. `mysql -u root -p` to run MySQL Server
+1. `SHOW DATABASES;`
+1. `USE election;`
+1. `SHOW TABLES;`
+1. `SELECT * FROM candidates;`
+
+if any errors, start over with `source db/db.sql` to create the db again.
+
+#### Create Connection to Express.js Server
+
+```
+// START IMPORT SECTION
+const express = require("express");
+const app = express();
+// Express middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+// END IMPORT SECTION
+
+const PORT = process.env.PORT || 3001;
+
+// function to start Express.js server on port 3001. Needs to be at bottom
+app.listen(port, () => {
+	console.log(`Server running on port ${PORT}`);
+});
+```
+
+#### Test the Express.js Connection
+
+##### Routes
+
+```
+// START ROUTE SECTION
+app.get("/", (req, res) => {
+	res.json({
+		message: "Hello World",
+	});
+});
+// END ROUTE SECTION
+```
+Start server and check it's working at localhost:3001
+
+#### Review the server.js File
+
+#### Connect to the MySQL Database

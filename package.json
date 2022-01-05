@@ -1,0 +1,29 @@
+{
+	"name": "bootcamp-module-12-u-develop-it",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "jest",
+		"start": "nodemon --exec node server.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/AndrewCLeonard/u-develop-it.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/AndrewCLeonard/u-develop-it/issues"
+	},
+	"homepage": "https://github.com/AndrewCLeonard/u-develop-it#readme",
+	"dependencies": {
+		"express": "^4.17.2",
+		"mysql2": "^2.3.3"
+	},
+	"devDependencies": {
+		"jest": "^27.4.7",
+		"nodemon": "^2.0.15"
+	}
+}
