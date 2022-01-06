@@ -415,9 +415,150 @@ db.query(`SELECT * FROM candidates`, (err, rows) => {
 #### Create MySQL Queries for Read, Delete, and Create Operations
 
 ##### Create Query for Read Operation
+
 return a single candidate from the `candidates` table based on their `id.`
+
+```
+// GET a single candidate
+db.query(`SELECT * FROM candidates WHERE id = 1`, (err, row) => {
+  if (err) {
+    console.log(err);
+  }
+  console.log(row);
+});
+```
+
+-   `id` `1` is hardcoded for now.
+-   if there aren't any errors, `err` comes back as `null`.
 
 ##### Create Query for Delete Operation
 
+```
+// Delete a candidate
+db.query(`DELETE FROM candidates WHERE id = ?`, 1, (err, result) => {
+  if (err) {
+    console.log(err);
+  }
+  console.log(result);
+});
+```
+
+-   question mark denotes a placeholder for a **prepared statement**. It can execute the same SQL statements repeatedly using different values in place of the placeholder.
+-   additional `param` argument following prepared statemetn provieds values to use in place of prepared statement's placeholders. `1` hardcoded temporarily.
+-   If you need additional placeholders, the `param` argument can be an array that holds multiple values for multiple placeholders.
+
 ##### Create Query for Create Operation
 
+```
+// Create a candidate
+const sql = `INSERT INTO candidates (id, first_name, last_name, industry_connected)
+              VALUES (?,?,?,?)`;
+const params = [1, 'Ronald', 'Firbank', 1];
+
+db.query(sql, params, (err, result) => {
+  if (err) {
+    console.log(err);
+  }
+  console.log(result);
+});
+```
+
+-   because `sql` statement and `params` long, we assigned them variables
+-   `INSERT INTO` adds values assigned to `params`.
+-   we need four placeholders (`?`) for the four values. Values in the `params` array must match the order of those placeholders.
+
+### 12.2.5 Create the GET Routes
+
+wrap the "GET Candidates" code in an Express.js route:
+
+```
+// Get all candidates
+app.get('/api/candidates', (req, res) => {
+  const sql = `SELECT * FROM candidates`;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: rows
+    });
+  });
+});
+```
+
+-   `api` in the URL signifies it's an API endpoint
+-   The callback function will handle the client's request and the database's response
+-   status code of 500 = server error (404 = user request error)
+-   see result at http://localhost:3001/api/candidate
+
+#### Get a Single Candidate
+
+```
+// Get a single candidate
+app.get('/api/candidate/:id', (req, res) => {
+  const sql = `SELECT * FROM candidates WHERE id = ?`;
+  const params = [req.params.id];
+
+  db.query(sql, params, (err, row) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: row
+    });
+  });
+});
+```
+
+-   `get()` route method again
+-   endpoint has route parameter that will hold teh value of `id` to specify which candidate we'll select from the database.
+-   In database call, we assign captured value populated in the `req.params` object with the key `id` to `params`.
+-   The db call will then query `candidates` table with this `id` & retrieve teh row specified
+-   Because `params` can be accepted into db call as an array, `params` is assigned as an array with a single element (`req.params.id`)
+-   Error status code 400 to notify client their request wasn't accepted and to try a different one.
+-   In the route response, `row` sent back to client in a JSON object.
+-   front-end team can use this API endpoint to select a specific candidate from the database. Each name links to an endpoint that can return details corresponding to the name selected.
+
+### 12.2.6 Create the DELETE Route
+
+```
+// Delete a candidate
+app.delete('/api/candidate/:id', (req, res) => {
+  const sql = `DELETE FROM candidates WHERE id = ?`;
+  const params = [req.params.id];
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.statusMessage(400).json({ error: res.message });
+    } else if (!result.affectedRows) {
+      res.json({
+        message: 'Candidate not found'
+      });
+    } else {
+      res.json({
+        message: 'deleted',
+        changes: result.affectedRows,
+        id: req.params.id
+      });
+    }
+  });
+});
+```
+
+-   uses HTTP request method `delete()`
+-   prepared SQL statement as placeholder variable `sql`
+-   `req.params.id` assigned to `params`
+-   Using route paramater again to uniquely identify the candidate to remove.
+-   Need to use insomnia to test it.
+-   front-end team could use this to remove people from `candidates` if/when someone drops out.
+
+### 12.2.7 Create the POST Route
+
+add Ronald back to the race
+
+https://courses.bootcampspot.com/courses/951/pages/12-dot-2-7-create-the-post-route?module_item_id=333350
