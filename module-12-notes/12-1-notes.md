@@ -406,7 +406,18 @@ db.query(`SELECT * FROM candidates`, (err, rows) => {
   console.log(rows);
 });
 ```
+
 -   `db` object using SQL's `query()` method
 -   Once this method executes the SQL command, callback function capturs responses from qeury in two variables
-    -   `err` for error response. If no errors, the `err` value is `null`. 
+    -   `err` for error response. If no errors, the `err` value is `null`.
     -   `rows` is the db query response.
+
+#### Create MySQL Queries for Read, Delete, and Create Operations
+
+##### Create Query for Read Operation
+return a single candidate from the `candidates` table based on their `id.`
+
+##### Create Query for Delete Operation
+
+##### Create Query for Create Operation
+
