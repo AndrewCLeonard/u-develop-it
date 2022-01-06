@@ -346,17 +346,67 @@ app.listen(port, () => {
 
 ##### Routes
 
+Use this to test the connection, then delete it:
+
 ```
-// START ROUTE SECTION
 app.get("/", (req, res) => {
 	res.json({
 		message: "Hello World",
 	});
 });
-// END ROUTE SECTION
 ```
+
 Start server and check it's working at localhost:3001
 
 #### Review the server.js File
 
+```
+const express = require('express');
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+// Express middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
+// Default response for any other request (Not Found)
+app.use((req, res) => {
+  res.status(404).end();
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
 #### Connect to the MySQL Database
+
+```
+// Connect to db
+const db = mysql.createConnection(
+	{
+		host: "localhost",
+		// My MySQL username,
+		user: "root",
+		// My password:
+		password: "REDACTED",
+		database: "election",
+	},
+	console.log("connected to the election database")
+);
+```
+
+### 12.2.4 Build the Database Calls
+
+add to `server.js`above `catchall` route totest connectionto db
+
+```
+db.query(`SELECT * FROM candidates`, (err, rows) => {
+  console.log(rows);
+});
+```
+-   `db` object using SQL's `query()` method
+-   Once this method executes the SQL command, callback function capturs responses from qeury in two variables
+    -   `err` for error response. If no errors, the `err` value is `null`. 
+    -   `rows` is the db query response.
