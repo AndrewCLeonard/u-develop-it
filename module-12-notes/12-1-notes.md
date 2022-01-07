@@ -893,7 +893,9 @@ mysql> SELECT candidates.*, parties.name
 +----+------------+------------+----------+--------------------+----------------+
 10 rows in set (0.00 sec)
 ```
+
 Using `AS` lets you define an **alias** for data:
+
 ```
 SELECT candidates.*, parties.name AS party_name
 FROM candidates
@@ -920,3 +922,126 @@ mysql> SELECT candidates.*, parties.name AS party_name
 +----+------------+------------+----------+--------------------+----------------+
 10 rows in set (0.00 sec)
 ```
+
+### 12.3.6 Create API Routes for Parties
+
+_create routes to display all parties and/or individual party_
+
+select all parties:
+
+```
+app.get('/api/parties', (req, res) => {
+	const sql = SELECT * FROM parties;
+	db.query(sql, (err, rows) => {
+		if (err) {
+			res.status(500).json({ error: err.message });
+			return;
+		}
+		res.json({
+			message: 'success',
+			data: rows
+		});
+	});
+});
+```
+
+select one party:
+
+```
+app.get('/api/party/:id', (req, res) => {
+  const sql = `SELECT * FROM parties WHERE id = ?`;
+  const params = [req.params.id];
+  db.query(sql, params, (err, row) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: row
+    });
+  });
+});
+```
+
+delete a party:
+
+```
+app.delete('/api/party/:id', (req, res) => {
+  const sql = `DELETE FROM parties WHERE id = ?`;
+  const params = [req.params.id];
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: res.message });
+      // checks if anything was deleted
+    } else if (!result.affectedRows) {
+      res.json({
+        message: 'Party not found'
+      });
+    } else {
+      res.json({
+        message: 'deleted',
+        changes: result.affectedRows,
+        id: req.params.id
+      });
+    }
+  });
+});
+```
+
+### 12.3.7 Add a Candidate Route to Change Their Party
+
+_route for when candidate changes their pary_
+
+| Request Type | Purpose         |
+| ------------ | --------------- |
+| GET          | Reading         |
+| POST         | Creating        |
+| DELETE       | Deleting        |
+| PUT          | Changing data?? |
+
+Could be done with only GET requests, but that would be confusing for others to understand.
+
+create PUT route:
+
+```
+// Update a candidate's party
+app.put('/api/candidate/:id', (req, res) => {
+  const sql = `UPDATE candidates SET party_id = ?
+               WHERE id = ?`;
+  const params = [req.body.party_id, req.params.id];
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      // check if a record was found
+    } else if (!result.affectedRows) {
+      res.json({
+        message: 'Candidate not found'
+      });
+    } else {
+      res.json({
+        message: 'success',
+        data: req.body,
+        changes: result.affectedRows
+      });
+    }
+  });
+});
+```
+
+-   parameter for candidate's id (`req.params.id`), but request body contains the party's id (`req.body.party_id`).
+    -   The affected row's id should always be part of the route (e.g. `/api/candidate/2`)
+    -   The actual fields we're updating should be part of the body.
+    -   when front-end making this request, `party_id` must be provided before updating the database. 
+
+add this before `sql` declaration:
+```
+const errors = inputCheck(req.body, 'party_id');
+
+if (errors) {
+  res.status(400).json({ error: errors });
+  return;
+}
+```    
+-   forces any PUT request to `/api/candidate/:id` to include `party_id` property. 
+    -   Even if intention is to remove a party affiliation by setting it to `null`, the `party_id` is still required. 
