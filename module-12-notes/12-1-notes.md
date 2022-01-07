@@ -314,7 +314,9 @@ and...
 `"start": "node server.js"` in `scripts` under `test`.
 
 #### Check the Database
+
 Important SQL Commands:
+
 1. `mysql -u root -p` to run MySQL Server
 1. `SHOW DATABASES;`
 1. `USE election;`
@@ -665,6 +667,8 @@ _No, this will still work because we have req.params.id as the param argument wh
 The status code should be 500
 _No, the status code should be 400 because we need to notify the client that their request wasn't accepted, not that there was a server error._
 
+## 12.3
+
 ### 12.3.1 Create the Parties Table
 
 Tasks:
@@ -690,6 +694,8 @@ _The candidate routes won’t be able to join with the party data and return thi
 | 3      | 12.3.5   | Create API routes for parties.                    | The routes for parties are fairly straightforward, so it would be helpful to take care of them now. |
 | 4      | 12.3.6   | Add a candidate route to change their party.      | Finally, you can tackle the trickier route of updating an existing record.                          |
 
+### 12.3.3 Create and Populate a Parties Table
+
 #### Relational Data
 
 -   prevents duplicate data y storing info in one location only
@@ -705,5 +711,212 @@ CREATE TABLE parties (
   description TEXT
 );
 ```
-- `TEXT` data type for `description` and _not_ `VARCHAR` because it can store much longer strings of varying length.
-  - Use sparingly to avoid file-size bloat. 
+
+-   `TEXT` data type for `description` and _not_ `VARCHAR` because it can store much longer strings of varying length.
+    -   Use sparingly to avoid file-size bloat.
+
+### 12.3.4 Update the Candidates Table to Reference Parties
+
+**foreign key**: a field in one table that references theprimary key of another table.
+
+`ALTER TABLE`: add a new field to a pre-existing table without losing data
+enter in MySQL Shell:
+
+```
+ALTER TABLE candidates ADD COLUMN party_id INTEGER;
+```
+
+(`NOT NULL` omitted because some may not belong to a party)
+
+add to `schema.sql` code:
+
+```
+CREATE TABLE candidates (
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(30) NOT NULL,
+  last_name VARCHAR(30) NOT NULL,
+  party_id INTEGER,
+  industry_connected BOOLEAN NOT NULL,
+  CONSTRAINT fk_party FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL
+);
+```
+
+**constraint**:
+
+-   allows you to flag a field as an official foreign key
+-   tells SQL which table and field it references
+-   noid can be inserted into `candidates` table if it doesn't also exist in the `parties` table
+-   therefore, `parties` table must be defined first
+-   `ON DELETE SET NULL` will set a candidate's `party_id` to `NULL` if the corresponding row in `parties` is ever deleted
+
+The parties need to be created first or the `INSERT` statements will fail due to the foreign key constraint added to the `candidates` schema.d
+add into `seeds.sql`:
+
+```
+INSERT INTO parties (name, description)
+VALUES
+  ('JS Juggernauts', 'The JS Juggernauts eat, breathe, and sleep JavaScript. They can build everything you could ever want in JS, including a new kitchen sink.'),
+  ('Heroes of HTML', 'Want to see a mock-up turn into an actual webpage in a matter of minutes? Well, the Heroes of HTML can get it done in a matter of seconds.'),
+  ('Git Gurus', 'Need to resolve a merge conflict? The Git Gurus have your back. Nobody knows Git like these folks do.');
+
+INSERT INTO candidates (first_name, last_name, party_id, industry_connected)
+VALUES
+  ('Ronald', 'Firbank', 1, 1),
+  ('Virginia', 'Woolf', 1, 1),
+  ('Piers', 'Gaveston', 1, 0),
+  ('Charles', 'LeRoi', 2, 1),
+  ('Katherine', 'Mansfield', 2, 1),
+  ('Dora', 'Carrington', 3, 0),
+  ('Edward', 'Bellamy', 3, 0),
+  ('Montague', 'Summers', 3, 1),
+  ('Octavia', 'Butler', 3, 1),
+  ('Unica', 'Zurn', NULL, 1);
+```
+
+test deleting of party:
+
+```
+DELETE FROM parties WHERE id = 1;
+SELECT * FROM candidates;
+```
+
+### 12.3.5 Update Candidate Routes to Join With Party Data
+
+**one-to-many** relationship: using foreign keys to reference data in other tables
+
+#### SQL's `JOIN` Statements
+
+The voting app's goal is to display a candidate's info alongside his/her party's name, not the `id`. We _don't_ have to query db twice (candidate & party, then merge. NOPE)
+![JOIN statement visualized](./images/550-join-examples.png)
+
+in MySQL shell:
+
+```
+SELECT * FROM candidates
+LEFT JOIN parties ON candidates.party_id = parties.id;
+```
+
+-   dot notation to specify `party_id` column in `candidates` table, just like js with object.property
+
+Reviewing progress so far before attempting the `JOIN`...
+_may help to zoom out to see table without breaks_
+
+##### Parties Table
+
+```
+mysql> select * from parties;
++----+----------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+| id | name           | description                                                                                                                                |
++----+----------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|  1 | JS Juggernauts | The JS Juggernauts eat, breathe, and sleep JavaScript. They can build everything you could ever want in JS, including a new kitchen sink.  |
+|  2 | Heroes of HTML | Want to see a mock-up turn into an actual webpage in a matter of minutes? Well, the Heroes of HTML can get it done in a matter of seconds. |
+|  3 | Git Gurus      | Need to resolve a merge conflict? The Git Gurus have your back. Nobody knows Git like these folks do.                                      |
++----+----------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+3 rows in set (0.00 sec)
+```
+
+##### Candidates Table
+
+```
+mysql> select * from candidates;
++----+------------+------------+----------+--------------------+
+| id | first_name | last_name  | party_id | industry_connected |
++----+------------+------------+----------+--------------------+
+|  1 | Ronald     | Firbank    |        1 |                  1 |
+|  2 | Virginia   | Woolf      |        1 |                  1 |
+|  3 | Piers      | Gaveston   |        1 |                  0 |
+|  4 | Charles    | LeRoi      |        2 |                  1 |
+|  5 | Katherine  | Mansfield  |        2 |                  1 |
+|  6 | Dora       | Carrington |        3 |                  0 |
+|  7 | Edward     | Bellamy    |        3 |                  0 |
+|  8 | Montague   | Summers    |        3 |                  1 |
+|  9 | Octavia    | Butler     |        3 |                  1 |
+| 10 | Unica      | Zurn       |     NULL |                  1 |
++----+------------+------------+----------+--------------------+
+10 rows in set (0.00 sec)
+```
+
+This query...
+
+```
+SELECT * FROM candidates
+LEFT JOIN parties ON candidates.party_id = parties.id;
+```
+
+returns...
+
+```
+mysql> SELECT * FROM candidates
+    -> LEFT JOIN parties ON candidates.party_id = parties.id;
++----+------------+------------+----------+--------------------+------+----------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+| id | first_name | last_name  | party_id | industry_connected | id   | name           | description                                                                                                                                |
++----+------------+------------+----------+--------------------+------+----------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|  1 | Ronald     | Firbank    |        1 |                  1 |    1 | JS Juggernauts | The JS Juggernauts eat, breathe, and sleep JavaScript. They can build everything you could ever want in JS, including a new kitchen sink.  |
+|  2 | Virginia   | Woolf      |        1 |                  1 |    1 | JS Juggernauts | The JS Juggernauts eat, breathe, and sleep JavaScript. They can build everything you could ever want in JS, including a new kitchen sink.  |
+|  3 | Piers      | Gaveston   |        1 |                  0 |    1 | JS Juggernauts | The JS Juggernauts eat, breathe, and sleep JavaScript. They can build everything you could ever want in JS, including a new kitchen sink.  |
+|  4 | Charles    | LeRoi      |        2 |                  1 |    2 | Heroes of HTML | Want to see a mock-up turn into an actual webpage in a matter of minutes? Well, the Heroes of HTML can get it done in a matter of seconds. |
+|  5 | Katherine  | Mansfield  |        2 |                  1 |    2 | Heroes of HTML | Want to see a mock-up turn into an actual webpage in a matter of minutes? Well, the Heroes of HTML can get it done in a matter of seconds. |
+|  6 | Dora       | Carrington |        3 |                  0 |    3 | Git Gurus      | Need to resolve a merge conflict? The Git Gurus have your back. Nobody knows Git like these folks do.                                      |
+|  7 | Edward     | Bellamy    |        3 |                  0 |    3 | Git Gurus      | Need to resolve a merge conflict? The Git Gurus have your back. Nobody knows Git like these folks do.                                      |
+|  8 | Montague   | Summers    |        3 |                  1 |    3 | Git Gurus      | Need to resolve a merge conflict? The Git Gurus have your back. Nobody knows Git like these folks do.                                      |
+|  9 | Octavia    | Butler     |        3 |                  1 |    3 | Git Gurus      | Need to resolve a merge conflict? The Git Gurus have your back. Nobody knows Git like these folks do.                                      |
+| 10 | Unica      | Zurn       |     NULL |                  1 | NULL | NULL           | NULL                                                                                                                                       |
++----+------------+------------+----------+--------------------+------+----------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+10 rows in set (0.00 sec)
+```
+
+...this is too much info. Using `candidates.*` is equilavent to selecting all the columns in `candidates`
+
+```
+SELECT candidates.*, parties.name
+FROM candidates
+LEFT JOIN parties ON candidates.party_id = parties.id;
+```
+
+```
+mysql> SELECT candidates.*, parties.name
+    -> FROM candidates
+    -> LEFT JOIN parties ON candidates.party_id = parties.id;
++----+------------+------------+----------+--------------------+----------------+
+| id | first_name | last_name  | party_id | industry_connected | name           |
++----+------------+------------+----------+--------------------+----------------+
+|  1 | Ronald     | Firbank    |        1 |                  1 | JS Juggernauts |
+|  2 | Virginia   | Woolf      |        1 |                  1 | JS Juggernauts |
+|  3 | Piers      | Gaveston   |        1 |                  0 | JS Juggernauts |
+|  4 | Charles    | LeRoi      |        2 |                  1 | Heroes of HTML |
+|  5 | Katherine  | Mansfield  |        2 |                  1 | Heroes of HTML |
+|  6 | Dora       | Carrington |        3 |                  0 | Git Gurus      |
+|  7 | Edward     | Bellamy    |        3 |                  0 | Git Gurus      |
+|  8 | Montague   | Summers    |        3 |                  1 | Git Gurus      |
+|  9 | Octavia    | Butler     |        3 |                  1 | Git Gurus      |
+| 10 | Unica      | Zurn       |     NULL |                  1 | NULL           |
++----+------------+------------+----------+--------------------+----------------+
+10 rows in set (0.00 sec)
+```
+Using `AS` lets you define an **alias** for data:
+```
+SELECT candidates.*, parties.name AS party_name
+FROM candidates
+LEFT JOIN parties ON candidates.party_id = parties.id;
+```
+
+```
+mysql> SELECT candidates.*, parties.name AS party_name
+    -> FROM candidates
+    -> LEFT JOIN parties ON candidates.party_id = parties.id;
++----+------------+------------+----------+--------------------+----------------+
+| id | first_name | last_name  | party_id | industry_connected | party_name     |
++----+------------+------------+----------+--------------------+----------------+
+|  1 | Ronald     | Firbank    |        1 |                  1 | JS Juggernauts |
+|  2 | Virginia   | Woolf      |        1 |                  1 | JS Juggernauts |
+|  3 | Piers      | Gaveston   |        1 |                  0 | JS Juggernauts |
+|  4 | Charles    | LeRoi      |        2 |                  1 | Heroes of HTML |
+|  5 | Katherine  | Mansfield  |        2 |                  1 | Heroes of HTML |
+|  6 | Dora       | Carrington |        3 |                  0 | Git Gurus      |
+|  7 | Edward     | Bellamy    |        3 |                  0 | Git Gurus      |
+|  8 | Montague   | Summers    |        3 |                  1 | Git Gurus      |
+|  9 | Octavia    | Butler     |        3 |                  1 | Git Gurus      |
+| 10 | Unica      | Zurn       |     NULL |                  1 | NULL           |
++----+------------+------------+----------+--------------------+----------------+
+10 rows in set (0.00 sec)
+```
