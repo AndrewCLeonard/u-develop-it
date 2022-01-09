@@ -1058,9 +1058,68 @@ if (errors) {
 
 Also check by updating with a `party_id` that doesn't exist like `4` to test foregin key constraints are working by default with `mysql2` npm package.
 
-## 12.4
+## 12.4 Create the Voters Table
 
 ### 12.4.1 Introduction
 
 ![Routes created thus far](./images/100-routes.png)
 
+### 12.4.2
+
+-   create voters table
+-   create new routes
+-   modularize the code
+
+Which of the following gameplans do you think is the best way to tackle this lesson?
+_GET routes are a little easier to build and test, so we should get them out of the way first. We can tackle the more complicated routes required for voters after we have built the GET routes._
+
+| Step # | Module # | Task                                 | Description                                                                                               |
+| ------ | -------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| 1      | 12.4.3   | Create and populate a voters table.  | We should ensure that we have data before we begin any other work.                                        |
+| 2      | 12.4.4   | Modularize the application.          | Because the app is getting larger, now is a good time to reorganize the code before it gets too unwieldy. |
+| 3      | 12.4.5   | Create GET routes for voters.        | Create routes to return voter data.                                                                       |
+| 4      | 12.4.    | Create POST, PUT, and DELETE routes. | Create routes to create, update, and delete voter data.                                                   |
+
+### 12.4.3 Create and Populate a Voters Tabel
+
+-   create new branch, `feature/voters`
+
+**normalization** = process of organizing relational data
+
+-   each table represents a specific topic (adheres to **separation of concerns**)
+-   limits data redundancy
+-   allows writing simpler SQL queries
+-   less risk of modification errors. By using primary key, and changes to that record happen in one place.
+
+#### Create Voters Table
+
+```
+CREATE TABLE voters (
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(30) NOT NULL,
+  last_name VARCHAR(30) NOT NULL,
+  email VARCHAR(50) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+-   Candidates have nothing to do with existance of voters, so they're not included in this table. Later will create separate table for voting.
+-   `created_at` field
+    -   logS the time they register
+    -   `DEFAULT` specifies what the value is if no value is provided (`NOT NULL` would force an input, or it could be `NULL` if the value isn't provided with an insert statement)
+    -   `CURRENT_TIMESTAMP` provided as value for `DEFAULT`. It is formatted as `2022-02-09 10:51:27`
+
+#### Add Voters to the Table
+
+-   add list of voters to `seeds.sql`.
+-   start MySQL CLI `mysql -u root -p`
+-   switch to `election` database: `USE election;`
+-   rebuild and seed the db:
+
+```
+source db/schema.sql
+source db/seeds.sql
+```
+
+-   test to make sure db is good to go
+-   we can quit MySQL CLI because it won't be needed anymore, so `quit;`
