@@ -1045,3 +1045,11 @@ if (errors) {
 ```    
 -   forces any PUT request to `/api/candidate/:id` to include `party_id` property. 
     -   Even if intention is to remove a party affiliation by setting it to `null`, the `party_id` is still required. 
+-   "duh moment": when checking PUT request in insomnia, you need to provide json data to test the update, such as:
+```
+{
+  "party_id": null
+}
+```
+
+Also check by updating with a `party_id` that doesn't exist like `4` to test foregin key constraints are working by default with `mysql2` npm package. 
