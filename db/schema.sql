@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS parties;
 
 CREATE TABLE parties (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(500) NOT NULL,
+  name VARCHAR(50) NOT NULL,
   description TEXT
 );
 

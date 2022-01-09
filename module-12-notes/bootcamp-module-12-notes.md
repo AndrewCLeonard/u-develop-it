@@ -717,7 +717,7 @@ CREATE TABLE parties (
 
 ### 12.3.4 Update the Candidates Table to Reference Parties
 
-**foreign key**: a field in one table that references theprimary key of another table.
+**foreign key**: a field in one table that references the primary key of another table.
 
 `ALTER TABLE`: add a new field to a pre-existing table without losing data
 enter in MySQL Shell:
@@ -747,7 +747,8 @@ CREATE TABLE candidates (
 -   tells SQL which table and field it references
 -   noid can be inserted into `candidates` table if it doesn't also exist in the `parties` table
 -   therefore, `parties` table must be defined first
--   `ON DELETE SET NULL` will set a candidate's `party_id` to `NULL` if the corresponding row in `parties` is ever deleted
+-   `ON DELETE SET NULL` will set a candidate's `party_id` to `NULL` if the corresponding row in `parties` is ever deleted.
+    -   Foreign Key is therefore specifying what should happen if a row is deleted.
 
 The parties need to be created first or the `INSERT` statements will fail due to the foreign key constraint added to the `candidates` schema.d
 add into `seeds.sql`:
@@ -1032,9 +1033,10 @@ app.put('/api/candidate/:id', (req, res) => {
 -   parameter for candidate's id (`req.params.id`), but request body contains the party's id (`req.body.party_id`).
     -   The affected row's id should always be part of the route (e.g. `/api/candidate/2`)
     -   The actual fields we're updating should be part of the body.
-    -   when front-end making this request, `party_id` must be provided before updating the database. 
+    -   when front-end making this request, `party_id` must be provided before updating the database.
 
 add this before `sql` declaration:
+
 ```
 const errors = inputCheck(req.body, 'party_id');
 
@@ -1042,14 +1044,23 @@ if (errors) {
   res.status(400).json({ error: errors });
   return;
 }
-```    
--   forces any PUT request to `/api/candidate/:id` to include `party_id` property. 
-    -   Even if intention is to remove a party affiliation by setting it to `null`, the `party_id` is still required. 
+```
+
+-   forces any PUT request to `/api/candidate/:id` to include `party_id` property.
+    -   Even if intention is to remove a party affiliation by setting it to `null`, the `party_id` is still required.
 -   "duh moment": when checking PUT request in insomnia, you need to provide json data to test the update, such as:
+
 ```
 {
   "party_id": null
 }
 ```
 
-Also check by updating with a `party_id` that doesn't exist like `4` to test foregin key constraints are working by default with `mysql2` npm package. 
+Also check by updating with a `party_id` that doesn't exist like `4` to test foregin key constraints are working by default with `mysql2` npm package.
+
+## 12.4
+
+### 12.4.1 Introduction
+
+![Routes created thus far](./images/100-routes.png)
+
