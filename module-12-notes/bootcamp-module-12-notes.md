@@ -266,17 +266,15 @@ create API routes to allow client web application to execute CRUD operations on 
 
 ### 12.2.2 Preview
 
-| Step # | Module # | Task                                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------ | -------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1      | 12.2.3   | Set up the Node.js application with MySQL. | Connect to the MySQL database in the Node.js application.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 2      | 12.2.4   | Build the database calls.                  | Use mysql2 to make calls to the database to execute the SQL queries.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| 3      | 12.2.5   | Create the GET routes.                     | Use Express.js to build the GET routes to perform the read operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 4      | 12.2.6   | Create the DELETE route.                   | Use Express.js to build the DELETE routes to perform the delete operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 5      | 12.2.7   | Create the POST route.                     | Use Express.js to build the POST routes to perform the create operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 6      | 12.2.8   | Save your progress with Git.               | Finally, we’ll need to close the corresponding GitHub issue.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| 7      | 12.2.9   | Set up the Node.js application with MySQL. | Connect to the MySQL database in the Node.js application. Build the database calls. Use mysql2 to make calls to the database to execute the SQL queries. Create the GET routes. Use Express.js to build the GET routes to perform the read operations. Create the DELETE route. Use Express.js to build the DELETE routes to perform the delete operations. Create the POST route. Use Express.js to build the POST routes to perform the create operations. Save your progress with Git. Finally, we’ll need to close the corresponding GitHub issue. , |
+_We’ll need to set up the Node.js application and install the mysql2 package before we can make calls to the database and build the routes for the CRUD operations._
 
-We’ll need to set up the Node.js application and install the mysql2 package before we can make calls to the database and build the routes for the CRUD operations.
+| Step # | Module # | Task                                       | Description                                                                 |
+| ------ | -------- | ------------------------------------------ | --------------------------------------------------------------------------- |
+| 1      | 12.2.3   | Set up the Node.js application with MySQL. | Connect to the MySQL database in the Node.js application.                   |
+| 2      | 12.2.4   | Build the database calls.                  | Use mysql2 to make calls to the database to execute the SQL queries.        |
+| 3      | 12.2.5   | Create the GET routes.                     | Use Express.js to build the GET routes to perform the read operations.      |
+| 4      | 12.2.6   | Create the DELETE route.                   | Use Express.js to build the DELETE routes to perform the delete operations. |
+| 5      | 12.2.7   | Create the POST route.                     | Use Express.js to build the POST routes to perform the create operations.   |
 
 ### 12.2.3 Set Up the Node.js Application with MySQL
 
@@ -1123,3 +1121,195 @@ source db/seeds.sql
 
 -   test to make sure db is good to go
 -   we can quit MySQL CLI because it won't be needed anymore, so `quit;`
+
+### 12.4.4 Modularize the Application
+
+_create a codebase that follows familiar design patterns and is easy to understand_
+
+Time to break `server.js` into
+
+1. database connection logic
+2. routes
+
+#### Modularize Database Connection Code
+
+_db connection logic will be in this file_
+
+-   create `db/connection.js`
+-   move the following to that file:
+
+```
+const mysql = require('mysql2');
+
+const db = mysql.createConnection({
+  host: 'localhost',
+  // Your MySQL username,
+  user: 'root',
+  // Your MySQL password
+  password: '',
+  database: 'election'
+});
+```
+
+-   export the module: `module.exports = db;`
+-   import module into `server.js` with `const db = require('./db/connection');`
+-   ensure it works with debugging questions
+    -   Are the files in the right places?
+    -   Is the module.exports and require syntax correct?
+    -   Did you make any typos?
+
+#### Modularize Routes Code
+
+-   create files/file system, with route files matching tables (separation of concerns):
+
+    -   `routes` folder
+        -   `apiRoutes` folder
+            -   `index.js`
+            -   `candidateRoutes.js`
+            -   `partyRoutes.js`
+            -   `voterRoutes.js`
+
+-   later, front-end team may want to have a `htmlRoutes` folder, so we need the `apiRoutes` folder here.
+
+#### Add Routes to the Route Files
+
+##### Add Code to index.js
+
+-   `index.js` will be central hub pulling all routes together.
+
+```
+const express = require('express');
+const router = express.Router();
+
+router.use(require())
+```
+
+##### Add Code to server.js
+
+```
+// Add near the top of the file
+const apiRoutes = require('./routes/apiRoutes');
+
+// Add after Express middleware
+app.use('/api', apiRoutes);
+```
+
+-   adding `/api` prefix here allows us to remove it from individual route expressions after we move them to their new home
+-   if there's an `index.js` in the path (here, it's `./routes/apiRoutes/index.js`), Node.js will automatically look for it when requiring the directory.
+
+##### Add Code to candidateRoutes.js
+
+declarations for top of file:
+
+```
+const express = require('express');
+const router = express.Router();
+const db = require('../../db/connection');
+const inputCheck = require('../../utils/inputCheck');
+```
+
+N.B.: I was getting this error because I forgot to add `require` statements. `router` not defined because I didn't include it at first:
+
+```
+connected to the election database
+C:\Users\andre\Documents\codingBootcampWindows\bootcamp-module-12-u-develop-it\routes\apiRoutes\candidateRoutes.js:8
+router.get("/candidates", (req, res) => {
+^
+
+ReferenceError: router is not defined
+    at Object.<anonymous> (C:\Users\andre\Documents\codingBootcampWindows\bootcamp-module-12-u-develop-it\routes\apiRoutes\candidateRoutes.js:8:1)
+    at Module._compile (node:internal/modules/cjs/loader:1101:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1153:10)
+    at Module.load (node:internal/modules/cjs/loader:981:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:1005:19)
+    at require (node:internal/modules/cjs/helpers:102:18)
+    at Object.<anonymous> (C:\Users\andre\Documents\codingBootcampWindows\bootcamp-module-12-u-develop-it\routes\apiRoutes\index.js:4:12)
+    at Module._compile (node:internal/modules/cjs/loader:1101:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1153:10)
+[nodemon] app crashed - waiting for file changes before starting...
+```
+
+-   Move all candidate-related routes from `server.js` to `candidateRoutes.js`
+    -   `app` object should be changed to `router`
+    -   URLs no longer need `'/api'` anymore because prefix defined in `server.js`
+
+```
+// originally app.get('/api/candidates')
+router.get('/candidates', (req, res) => {
+  // internal logic remains the same
+});
+
+// originally app.get('/api/candidate/:id')
+router.get('/candidate/:id', (req, res) => {});
+
+// originally app.post('/api/candidate')
+router.post('/candidate', ({ body }, res) => {});
+
+// originally app.put('/api/candidate/:id')
+router.put('/candidate/:id', (req, res) => {});
+
+// originally app.delete('/api/candidate/:id')
+router.delete('/candidate/:id', (req, res) => {});
+```
+
+##### Add Code to partyRoutes.js
+
+add this code in `index.js`:
+
+`router.use(require("./partyRoutes"));`
+
+move from `server.js` into `partyRoutes.js`:
+
+```
+const express = require('express');
+const router = express.Router();
+const db = require('../../db/connection');
+
+// Get all parties
+router.get('/parties', (req, res) => {
+  // internal logic remains the same
+});
+
+// Get single party
+router.get('/party/:id', (req, res) => {});
+
+// Delete a party
+router.delete('/party/:id', (req, res) => {});
+
+module.exports = router;
+```
+
+##### Review the Streamlined `server.js` File
+
+```
+const express = require('express');
+const db = require('./db/connection');
+const apiRoutes = require('./routes/apiRoutes');
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+// Express middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
+// Use apiRoutes
+app.use('/api', apiRoutes);
+
+// Default response for any other request (Not Found)
+app.use((req, res) => {
+  res.status(404).end();
+});
+
+??? I missed this somehow? I don't remember this at all
+
+// Start server after DB connection
+db.connect(err => {
+  if (err) throw err;
+  console.log('Database connected.');
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+});
+```
