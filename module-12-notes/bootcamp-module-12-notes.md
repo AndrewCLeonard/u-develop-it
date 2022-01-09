@@ -1313,3 +1313,151 @@ db.connect(err => {
   });
 });
 ```
+
+### 12.4.5 Create GET Routes for Voters
+
+_GET routes first because simpler and easier to test_
+
+#### Prepare index.js and voterRoutes.js
+
+GET route in `voterRoutes.js`:
+
+```
+router.get('/voters', (req, res) => {
+  const sql = `SELECT * FROM voters`;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: rows,
+    });
+  });
+});
+```
+
+export router:
+
+`module.exports = router;`
+
+-   test to make sure it works. Remember to use the api in `/api/voters` route because of the prefix defined in `server.js`.
+
+#### Add Sort Option to Return Voters in Alphabetical Order
+
+js's `Array.prototype.sort()` method could sort names before sending back response, but SQL has sort options built in:
+
+```
+const sql = `SELECT * FROM voters ORDER BY last_name`;
+```
+
+-   adding `DESC` to end of that would make it ordered Z-A.
+
+route for individual voters:
+
+```
+// Get single voter
+router.get('/voter/:id', (req, res) => {
+  const sql = `SELECT * FROM voters WHERE id = ?`;
+  const params = [req.params.id];
+
+  db.query(sql, params, (err, row) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: row
+    });
+  });
+});
+```
+
+### 12.4.6 Create POST, PUT, and DELETE Routes
+
+-   _allow people to_
+    -   _register through the app (POST requests)_
+    -   _update their email addresses (PUT requests)_
+    -   _deactivate their accounts (DELETE requests)_
+
+#### Create POST Route
+
+front end will send:
+
+-   first name
+-   last name
+-   email address
+
+therefore:
+
+```
+router.post('/voter', ({ body }, res) => {
+  const sql = `INSERT INTO voters (first_name, last_name, email) VALUES (?,?,?)`;
+  const params = [body.first_name, body.last_name, body.email];
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: body
+    });
+  });
+});
+```
+
+-   The `?` prepared statements will protect from malicious data
+-   Also need to prevent blank records from being created:
+
+```
+// Data validation
+const errors = inputCheck(body, 'first_name', 'last_name', 'email');
+if (errors) {
+  res.status(400).json({ error: errors });
+  return;
+}
+```
+
+-   test the route, remembering that this is a `POST`, so sample json needs to be provided
+
+#### Create PUT Route
+
+_so users can update their email addresses_
+requires a combo of
+
+-   `req.params` to capture who is being updated
+-   `req.body` to capture what is being updated
+
+Add to `voterRoutes.js`:
+
+```
+router.delete('/voter/:id', (req, res) => {
+  const sql = `DELETE FROM voters WHERE id = ?`;
+
+  db.query(sql, req.params.id, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: res.message });
+    } else if (!result.affectedRows) {
+      res.json({
+        message: 'Voter not found'
+      });
+    } else {
+      res.json({
+        message: 'deleted',
+        changes: result.affectedRows,
+        id: req.params.id
+      });
+    }
+  });
+});
+```
+
+-   no `params` array created to store the `req.params.id`.
+    -   yes, it would make code more legible
+    -   but costs allocating memory to store the object
+    -   ??? Really this would make a difference?
