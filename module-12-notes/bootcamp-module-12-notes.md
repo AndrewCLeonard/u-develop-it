@@ -1461,3 +1461,112 @@ router.delete('/voter/:id', (req, res) => {
     -   yes, it would make code more legible
     -   but costs allocating memory to store the object
     -   ??? Really this would make a difference?
+
+## 12.5 Create a Votes Table
+
+### 12.5.1 Introduction
+
+Familiar Tasks:
+
+-   Creating a new table that includes foreign keys.
+-   Writing a slightly more complex JOIN query.
+
+New Skills:
+
+-   Using SQL commands to count the values in a table.
+-   Implementing constraints to prevent duplicate or nullified votes.
+
+Important to stay organized because professional apps can have 100s of tables
+
+### 12.5.2 Preview
+
+-   create new table for votes
+-   implement API route to add up votes for each candidate
+
+_Although we could create either API route first, it makes more sense to create a route that allows us to add votes before we create the route that allows us to get vote totals. This will let us populate the table with some test data before we test the route that returns vote totals._
+
+| Step # | Task                                    | Description                                                                                   |
+| ------ | --------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1      | Create a votes table.                   | You’ll need vote data before you can make progress on any other step.                         |
+| 2      | Create an API route to add new votes.   | Now that the table is in place, let's create a route to make it easier to populate the table. |
+| 3      | Write a query to get vote totals.       | Next, you’ll want to spend some time solidifying the right query that will get vote totals.   |
+| 4      | Create an API route to get vote totals. | Once you have a working SELECT query, you can build the route that uses it.                   |
+
+### 12.5.3 Createa Votes Table
+
+-   new branch `feature/votes`
+
+What will `votes` table need?
+
+| Requirement        | ...So We Need...     |
+| ------------------ | -------------------- |
+| know who voted     | `voter_id` field     |
+| who they voted for | `candidate_id" field |
+| when vote was cast | `created_at` field   |
+
+build it in `schema.sql`:
+
+```
+CREATE TABLE votes (
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  voter_id INTEGER NOT NULL,
+  candidate_id INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+);
+```
+
+**Very important to drop tables in following order:**
+
+```
+DROP TABLE IF EXISTS votes;
+DROP TABLE IF EXISTS candidates;
+DROP TABLE IF EXISTS parties;
+DROP TABLE IF EXISTS voters;
+```
+
+further requirements which _could_ be handled with js, but safer to use the db's constraints:
+| Requirement | ...So We Need... |
+| ------------------------------------------------------ | -------------------- |
+| no voting twice | no duplicate records |
+| if person votes for someone who subsequently drops out | remove that vote |
+
+```
+CREATE TABLE votes (
+  id INTEGER AUTO_INCREMENT PRIMARY KEY,
+  voter_id INTEGER NOT NULL,
+  candidate_id INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uc_voter UNIQUE (voter_id),
+  CONSTRAINT fk_voter FOREIGN KEY (voter_id) REFERENCES voters(id) ON DELETE CASCADE,
+  CONSTRAINT fk_candidate FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
+);
+```
+
+| Code                 | Description                                                       |
+| -------------------- | ----------------------------------------------------------------- |
+| `uc_voter`           | values inserted into the `voter_id` field must be unique          |
+| `ON DELETE SET NULL` | sets record's field to `NULL` if key from reference table deleted |
+| `ON DELETE CASCADE`  | deleting reference key also deletes entire row from table         |
+
+start MySQL and rebuild db:
+
+```
+USE election;
+source db/schema.sql
+source db/seeds.sql
+```
+
+run these one at a time to test. 3rd statement should give error:
+
+```
+INSERT INTO votes (voter_id, candidate_id) VALUES(1, 1);
+INSERT INTO votes (voter_id, candidate_id) VALUES(2, 1);
+INSERT INTO votes (voter_id, candidate_id) VALUES(2, 2);
+```
+
+test `ON DELETE CASCADE`:
+
+```
+DELETE FROM voters WHERE id = 2;
+SELECT * FROM votes;
+```
