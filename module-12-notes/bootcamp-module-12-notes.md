@@ -1570,3 +1570,152 @@ test `ON DELETE CASCADE`:
 DELETE FROM voters WHERE id = 2;
 SELECT * FROM votes;
 ```
+
+### 12.5.4 Create an API Route to Add New Votes
+
+_voting takes place through front-end app = POST route required_
+
+import modules:
+
+```
+const express = require('express');
+const router = express.Router();
+const db = require('../../db/connection');
+const inputCheck = require('../../utils/inputCheck');
+```
+
+How will POST route be used?
+
+| Requirement                                             | ...So We Need...                  |
+| ------------------------------------------------------- | --------------------------------- |
+| front end will need to send IDs for voter and candidate | use `inputCheck()` function again |
+| avoid SQL injection                                     | prepared statements               |
+
+add route to `voteRoutes.js`:
+
+```
+router.post('/vote', ({ body }, res) => {
+  // Data validation
+  const errors = inputCheck(body, 'voter_id', 'candidate_id');
+  if (errors) {
+    res.status(400).json({ error: errors });
+    return;
+  }
+
+  const sql = `INSERT INTO votes (voter_id, candidate_id) VALUES (?,?)`;
+  const params = [body.voter_id, body.candidate_id];
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: 'success',
+      data: body,
+      changes: result.affectedRows
+    });
+  });
+});
+```
+
+...and export the route to `index.js` so it can be imported:
+
+```
+module.exports = router;
+```
+
+### 12.5.5 Write Query to Get Vote Totals
+
+use MySql CLI to figure out query before coding it.
+
+-   open MySQL with `mySQL -u root -p`
+-   add more records to `votes` table:
+
+```
+INSERT INTO votes (voter_id, candidate_id)
+VALUES(3,1), (4,2), (5,2), (6,2), (7,2), (8,3), (9,3);
+```
+
+#### using SQL aggregate functions
+
+This query:
+
+```
+select count(candidate_id) from votes;
+```
+
+returns total # of votes cast:
+
+```
++---------------------+
+| count(candidate_id) |
++---------------------+
+|                   9 |
++---------------------+
+```
+
+This query:
+
+```
+SELECT COUNT(candidate_id) FROM votes GROUP BY candidate_id;
+```
+
+returns # of votes cast for candidates, but without foreign key, we can't tell who votes are for:
+
+```
++---------------------+
+| COUNT(candidate_id) |
++---------------------+
+|                   1 |
+|                   4 |
+|                   2 |
+|                   2 |
++---------------------+
+```
+
+Need to join this with `candidates` table and `parties` table
+
+```
+SELECT candidates.*, parties.name AS party_name, COUNT(candidate_id)
+FROM votes
+LEFT JOIN candidates ON votes.candidate_id = candidates.id
+LEFT JOIN parties ON candidates.party_id = parties.id
+GROUP BY candidate_id;
+```
+
+```
++------+------------+-----------+----------+--------------------+----------------+---------------------+
+| id   | first_name | last_name | party_id | industry_connected | party_name     | COUNT(candidate_id) |
++------+------------+-----------+----------+--------------------+----------------+---------------------+
+|    1 | Ronald     | Firbank   |        1 |                  1 | JS Juggernauts |                   1 |
+|    2 | Virginia   | Woolf     |        1 |                  1 | JS Juggernauts |                   4 |
+|    3 | Piers      | Gaveston  |        1 |                  0 | JS Juggernauts |                   2 |
+|    5 | Katherine  | Mansfield |        2 |                  1 | Heroes of HTML |                   2 |
++------+------------+-----------+----------+--------------------+----------------+---------------------+
+```
+
+add `ORDER BY count DESC;`
+
+```
+SELECT candidates.*, parties.name AS party_name, COUNT(candidate_id) AS count
+FROM votes
+LEFT JOIN candidates ON votes.candidate_id = candidates.id
+LEFT JOIN parties ON candidates.party_id = parties.id
+GROUP BY candidate_id ORDER BY count DESC;
+```
+
+```
+
++------+------------+-----------+----------+--------------------+----------------+-------+
+| id   | first_name | last_name | party_id | industry_connected | party_name     | count |
++------+------------+-----------+----------+--------------------+----------------+-------+
+|    2 | Virginia   | Woolf     |        1 |                  1 | JS Juggernauts |     4 |
+|    3 | Piers      | Gaveston  |        1 |                  0 | JS Juggernauts |     2 |
+|    5 | Katherine  | Mansfield |        2 |                  1 | Heroes of HTML |     2 |
+|    1 | Ronald     | Firbank   |        1 |                  1 | JS Juggernauts |     1 |
++------+------------+-----------+----------+--------------------+----------------+-------+
+```
+
+### 12.5.6 Create an API Route to Get Vote Totals
+_port that SQL into Node.js app_ 
