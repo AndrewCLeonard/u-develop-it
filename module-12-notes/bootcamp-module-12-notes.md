@@ -1718,4 +1718,17 @@ GROUP BY candidate_id ORDER BY count DESC;
 ```
 
 ### 12.5.6 Create an API Route to Get Vote Totals
-_port that SQL into Node.js app_ 
+
+_port that SQL into Node.js app_
+
+**I was able to figure out code on my own by copying! Progress? Sorta?**
+
+1. Add a router.get('/votes') method to voteRoutes.js.
+2. Declare a sql variable and set it equal to the SQL query you just wrote.
+3. Run the query with db.query().
+4. In the callback function, check for errors and return a status of 500 if there are any.
+5. Otherwise, return a success object that includes the rows of data.
+
+-   add, commit, push. 
+-   git merge into `develop`
+-   merge that into `main`
