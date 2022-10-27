@@ -85,3 +85,6 @@ Create the votes table
 ### Clone the Repo and Create Branches
 
 ### Set up the Project Directory
+
+# 12.1.4
+open MySQL Shell with `mysql -u root -p`
