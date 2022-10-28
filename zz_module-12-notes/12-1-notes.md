@@ -153,3 +153,7 @@ LEFT JOIN parties ON candidates.party_id = parties.id;
 -   Add timestamps to newly created data.
 -   Sort data as it is retrieved from the database.
 
+### 12.4.4 Modularize the Application
+
+-   By adding the `/api` prefix is `server.js`, we can remove it from the individual route expressions after we move them to their new home.
+-   Remember that you don't have to specify `index.js` in the path (e.g., `./routes/apiRoutes/index.js`). If the directory has an `index.js` file in it, Node.js will automatically look for it when requiring the directory.

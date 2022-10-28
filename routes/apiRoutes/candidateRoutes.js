@@ -5,7 +5,7 @@ const db = require("../../db/connection");
 const inputCheck = require("../../utils/inputCheck");
 // END DECLARATIONS SECTION
 
-// START CANDIDATE SECTION VVV
+// START CANDIDATE SECTION
 
 // GET all candidates
 router.get("/candidates", (req, res) => {
@@ -123,6 +123,6 @@ router.delete("/candidate/:id", (req, res) => {
 	});
 });
 
-// END CANDIDATE SECTION ^^^
+// END CANDIDATE SECTION
 
 module.exports = router;
