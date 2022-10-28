@@ -125,3 +125,20 @@ important!
 -   SQL `ALTER TABLE` STATEMENT = add a new field, delete an existing field, or modify a field.
 -   `DESCRIBE <table name>` = show all details about a tale
 -   `CONSTRAINT fk_party FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL`
+
+### 12.3.5
+
+important!
+examples of searches with `LEFT JOIN`:
+
+```
+SELECT candidates.*, parties.name AS party_name
+FROM candidates
+LEFT JOIN parties ON candidates.party_id = parties.id;
+```
+
+`AS` keyword defines alias for data when joining tables with overlapping names. 
+
+### 12.3.6 Create API Routes for Parties
+
+### 12.3.7 Add a Candidate Route to Change Their Party
