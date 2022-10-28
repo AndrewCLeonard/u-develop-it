@@ -29,11 +29,10 @@ const db = mysql.createConnection(
 // START ROUTE SECTION
 
 // test connection to database
-/*
+
 db.query(`SELECT * FROM candidates`, (err, rows) => {
-    console.log(rows);
+	console.log(rows);
 });
-*/
 
 // GET all candidates
 app.get("/api/candidates", (req, res) => {
