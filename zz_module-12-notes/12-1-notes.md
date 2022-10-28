@@ -86,5 +86,42 @@ Create the votes table
 
 ### Set up the Project Directory
 
-# 12.1.4
+## 12.1.4
+
 open MySQL Shell with `mysql -u root -p`
+
+## 12.3
+
+### 12.3.1
+
+Adding party data will give us a chance to build on past experience by doing the following tasks:
+
+-   Creating a new table using MySQL.
+-   Populating the new table with data.
+-   Creating API routes to retrieve this data via HTTP requests.
+
+Along the way, you'll learn some new tricks, including how to do the following:
+
+-   Update a schema to accommodate new fields.
+-   Combine data from two separate tables.
+-   Implement constraints to avoid bad data from persisting.
+
+### 12.3.2
+
+_The candidate routes won’t be able to join with the party data and return this combined data until the candidates table includes a party reference._
+
+1. Create and populate a parties table. You'll need some party data before you can make progress on any other step.
+1. Update the candidates table to reference parties. Once you have a parties table, you can update the candidates table to reference it.
+1. Update candidate routes to join with party data. Update the existing route to return the combined data.
+1. Create API routes for parties. The routes for parties are fairly straightforward, so it would be helpful to take care of them now.
+1. Add a candidate route to change their party. Finally, you can tackle the trickier route of updating an existing record.
+
+### 12.3.3
+
+### 12.3.4
+
+important!
+
+-   SQL `ALTER TABLE` STATEMENT = add a new field, delete an existing field, or modify a field.
+-   `DESCRIBE <table name>` = show all details about a tale
+-   `CONSTRAINT fk_party FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL`
