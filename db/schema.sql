@@ -1,4 +1,5 @@
 -- DROP STATEMENTS have to be in this order
+DROP TABLE IF EXISTS votes;
 DROP TABLE IF EXISTS candidates;
 DROP TABLE IF EXISTS parties;
 DROP TABLE IF EXISTS voters;
@@ -31,7 +32,9 @@ CREATE TABLE votes (
   voter_id INTEGER NOT NULL,
   candidate_id INTEGER NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  -- `voter_id` values need to be unique
   CONSTRAINT uc_voter UNIQUE (voter_id),
+  -- "cascade" statement removes the entire row from the table (rather than setting to null)
   CONSTRAINT fk_voter FOREIGN KEY (voter_id) REFERENCES voters(id) ON DELETE CASCADE,
   CONSTRAINT fk_candidate FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
 );
