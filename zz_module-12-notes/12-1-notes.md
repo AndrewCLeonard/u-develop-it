@@ -92,6 +92,10 @@ open MySQL Shell with `mysql -u root -p`
 
 ## 12.3
 
+-   Made changes to a schema by using ALTER and DROP statements.
+-   Combined relational data using JOIN statements.
+-   Added foreign key constraints to remove references to deleted data.
+
 ### 12.3.1
 
 Adding party data will give us a chance to build on past experience by doing the following tasks:
@@ -137,8 +141,15 @@ FROM candidates
 LEFT JOIN parties ON candidates.party_id = parties.id;
 ```
 
-`AS` keyword defines alias for data when joining tables with overlapping names. 
+`AS` keyword defines alias for data when joining tables with overlapping names.
 
 ### 12.3.6 Create API Routes for Parties
 
 ### 12.3.7 Add a Candidate Route to Change Their Party
+
+## 12.4
+
+-   Modularize API routes.
+-   Add timestamps to newly created data.
+-   Sort data as it is retrieved from the database.
+
