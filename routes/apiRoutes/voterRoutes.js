@@ -1,10 +1,9 @@
-// START IMPORT MODULES SECTION
+// imports
 const express = require("express");
-// const { route } = require("."); // this creates a circular dependency. Why was it added, when was it removed?
 const router = express.Router();
 const db = require("../../db/connection");
 const inputCheck = require("../../utils/inputCheck");
-// END IMPORT MODULES SECTION
+// const { route } = require("."); // this creates a circular dependency. Why was it added, when was it removed?
 
 // START ROUTES SECTION
 // order of routs in this section is: GET, POST, PUT, DELETE
